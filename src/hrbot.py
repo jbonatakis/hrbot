@@ -21,7 +21,7 @@ def lambda_handler(event, context):
     if reason is None:
         responseText = "{} has received an HR Violation!".format(name)
     else:
-        responseText = "{} has received an HR Violation for {}!".format(name, reason)
+        responseText = "{} has received an HR Violation! Reason: {}!".format(name, reason)
         
     
     body = {

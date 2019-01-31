@@ -1,6 +1,11 @@
 import json
+import datetime
+import boto3
 
 def lambda_handler(event, context):
+    
+    now = datetime.datetime.now()
+    violationTime = now.strftime("%Y-%m-%d %H:%M:%S")
     
     body = list(json.dumps(event['body']).split("&"))
     d = dict(s.split('=') for s in body)
@@ -17,6 +22,14 @@ def lambda_handler(event, context):
         pass
     else:
         reason = reason.replace('+', ' ')
+    
+    dynamodb = boto3.client('dynamodb')
+    
+    if reason is None:
+        dynamodb.put_item(TableName='hrViolations', Item={'violationTime':{'S':violationTime},'name':{'S':name}})
+    else:
+        dynamodb.put_item(TableName='hrViolations', Item={'violationTime':{'S':violationTime},'name':{'S':name}, 'reason':{'S':reason}})
+        
     
     if reason is None:
         responseText = "{} has received an HR Violation!".format(name)

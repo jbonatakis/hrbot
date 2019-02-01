@@ -26,15 +26,15 @@ def lambda_handler(event, context):
     dynamodb = boto3.client('dynamodb')
     
     if reason is None:
-        dynamodb.put_item(TableName='hrViolations', Item={'violationTime':{'S':violationTime},'name':{'S':name}})
+        dynamodb.put_item(TableName='hrViolations', Item={'violationTime':{'S':violationTime},'name':{'S':name.capitalize()}})
     else:
-        dynamodb.put_item(TableName='hrViolations', Item={'violationTime':{'S':violationTime},'name':{'S':name}, 'reason':{'S':reason}})
+        dynamodb.put_item(TableName='hrViolations', Item={'violationTime':{'S':violationTime},'name':{'S':name.capitalize()}, 'reason':{'S':reason}})
         
     
     if reason is None:
-        responseText = "{} has received an HR Violation!".format(name)
+        responseText = "{} has received an HR Violation!".format(name.capitalize())
     else:
-        responseText = "{} has received an HR Violation! Reason: {}!".format(name, reason)
+        responseText = "{} has received an HR Violation! Reason: {}!".format(name.capitalize(), reason.capitalize())
         
     
     body = {

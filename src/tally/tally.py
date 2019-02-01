@@ -1,40 +1,53 @@
 import json
 import boto3
-import pandas as pd
-
 
 def lambda_handler(event, context):
     
     dynamodb = boto3.resource('dynamodb')
     table = dynamodb.Table('hrViolations')
+    
     fullTable = table.scan()
-    itemCount = fullTable['Count']
-    data = json.dumps(fullTable, indent=4)
-
+    
+    itemCount = int(fullTable['Count'])
+    
+    data = fullTable['Items']
+    
     nameList = []
-    reasonList = []
-
-    indexList = []
-
-    for count, i in enumerate(range(num)):
-        name = data[count]['name']
+    uniqueNameList = []
+    uniqueNameCount = []
+    
+    for i in range(itemCount):
+        name = data[i]['name']
         nameList.append(name)
-
-        reason = data[count]['reason']
-        reasonList.append(reason)
-
-    violations = pd.DataFrame({'Name':nameList, 'Violations':reasonList}).groupby('Name').agg('count')
-    violations.reset_index(inplace=True)
-
-    uniqueName = []
-    violationCount = []
-
-    for index, row in violations.iterrows():
-        uniqueName.append(row['Name']) 
-        violationCount.append(row['Violations'])
+    
+    for name in nameList:
+        if name not in uniqueNameList:
+            uniqueNameList.append(name)
+    
+    for name in uniqueNameList:
+        ct = nameList.count(name)
+        uniqueNameCount.append(ct)
+        
+    
+    uniqueNameCount, uniqueNameList = (list(t) for t in zip(*sorted(zip(uniqueNameCount, uniqueNameList), reverse=True)))
+    
+    name1 = uniqueNameList[0]
+    name2 = uniqueNameList[1]
+    name3 = uniqueNameList[2]
+    
+    name1Count = nameList.count(name1)
+    name2Count = nameList.count(name2)
+    name3Count = nameList.count(name3)
+    
+    
+    text = "Top HR Violators:\nName: {} Violations: {}\nName: {} Violations: {}\nName: {} Violations: {}".format(name1, name1Count, name2, name2Count, name3, name3Count)
+            
+    
+    
+    
     
     body = {
-        "text": uniqueName,
+        "text": text,
         "response_type": "in_channel"
     }
 

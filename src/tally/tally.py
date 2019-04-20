@@ -1,7 +1,18 @@
 import json
 import boto3
+import urllib
 
 def lambda_handler(event, context):
+    
+    body = list(json.dumps(event['body']).split("&"))
+    d = dict(s.split('=') for s in body)
+    
+    maxNumShow = 10
+    
+    try:
+        numShow = int(urllib.parse.unquote(d["text"]))
+    except ValueError:
+        numShow = 3
     
     dynamodb = boto3.resource('dynamodb')
     table = dynamodb.Table('hrViolations')
@@ -31,21 +42,15 @@ def lambda_handler(event, context):
     
     uniqueNameCount, uniqueNameList = (list(t) for t in zip(*sorted(zip(uniqueNameCount, uniqueNameList), reverse=True)))
     
-    name1 = uniqueNameList[0]
-    name2 = uniqueNameList[1]
-    name3 = uniqueNameList[2]
+    text = "Top {} HR Violators:\n".format(min(numShow, maxNumShow))
     
-    name1Count = nameList.count(name1)
-    name2Count = nameList.count(name2)
-    name3Count = nameList.count(name3)
-    
-    
-    text = "Top HR Violators:\nName: {} Violations: {}\nName: {} Violations: {}\nName: {} Violations: {}".format(name1, name1Count, name2, name2Count, name3, name3Count)
-            
-    
-    
-    
-    
+    for num in range(min(numShow, maxNumShow)):
+        user = uniqueNameList[num]
+        cnt = nameList.count(user)
+        addString = "Name: {} Violations: {}\n".format(user, cnt)
+        text+= addString
+        
+   
     body = {
         "text": text,
         "response_type": "in_channel"

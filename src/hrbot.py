@@ -1,6 +1,7 @@
 import json
 import datetime
 import boto3
+import urllib
 
 def lambda_handler(event, context):
     
@@ -9,9 +10,10 @@ def lambda_handler(event, context):
     
     body = list(json.dumps(event['body']).split("&"))
     d = dict(s.split('=') for s in body)
-    text = d["text"]
+    text = urllib.parse.unquote(d["text"])
+    givenBy = urllib.parse.unquote(d["user_name"])
     textList = list(text.split('+', 1))
-    name = textList[0].replace('%40', '').replace("%E2%80%99", "'")
+    name = textList[0]
     
     try:
         reason = textList[1]
@@ -26,15 +28,26 @@ def lambda_handler(event, context):
     dynamodb = boto3.client('dynamodb')
     
     if reason is None:
-        dynamodb.put_item(TableName='hrViolations', Item={'violationTime':{'S':violationTime},'name':{'S':name.capitalize()}})
+        dynamodb.put_item(TableName='hrViolations',
+                Item={ 
+                    'violationTime':{'S':violationTime},
+                    'name':{'S':name.capitalize()},
+                    'givenBy':{'S':givenBy.capitalize()}
+                })
     else:
-        dynamodb.put_item(TableName='hrViolations', Item={'violationTime':{'S':violationTime},'name':{'S':name.capitalize()}, 'reason':{'S':reason}})
+        dynamodb.put_item(TableName='hrViolations',
+                Item={
+                    'violationTime':{'S':violationTime},
+                    'name':{'S':name.capitalize()},
+                    'reason':{'S':reason},
+                    'givenBy':{'S':givenBy.capitalize()}
+                })
         
     
     if reason is None:
         responseText = "{} has received an HR Violation!".format(name.capitalize())
     else:
-        responseText = "{} has received an HR Violation! Reason: {}!".format(name.capitalize(), reason.capitalize())
+        responseText = "{} has received an HR Violation! \nReason: {}".format(name.capitalize(), reason.capitalize())
         
     
     body = {

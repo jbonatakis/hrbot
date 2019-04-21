@@ -10,7 +10,11 @@ def lambda_handler(event, context):
     maxNumShow = 10
     
     try:
-        numShow = int(urllib.parse.unquote(d["text"]))
+        if int(urllib.parse.unquote(d["text"])) < 1:
+            numShow = 3
+        else:
+            numShow = int(urllib.parse.unquote(d["text"]))
+        
     except ValueError:
         numShow = 3
     
@@ -42,17 +46,17 @@ def lambda_handler(event, context):
     
     uniqueNameCount, uniqueNameList = (list(t) for t in zip(*sorted(zip(uniqueNameCount, uniqueNameList), reverse=True)))
     
-    text = "Top {} HR Violators:\n".format(min(numShow, maxNumShow))
+    text = ["Top {} HR Violators:\n".format(min(numShow, maxNumShow))]
     
     for num in range(min(numShow, maxNumShow)):
         user = uniqueNameList[num]
         cnt = nameList.count(user)
-        addString = "Name: {} Violations: {}\n".format(user, cnt)
-        text+= addString
+        text.append("Name: {} Violations: {}\n".format(user, cnt))
         
-   
+    violators = "".join(text)
+    
     body = {
-        "text": text,
+        "text": violators,
         "response_type": "in_channel"
     }
 
@@ -62,3 +66,4 @@ def lambda_handler(event, context):
     }
 
     return response
+
